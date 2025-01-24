@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY ["api/api.sln", "api/"]
+COPY ["api/api.csproj", "api/"]
+RUN dotnet restore "api/api.sln"
+
+COPY . .
+RUN dotnet publish "api/api.csproj" -c Release -o /app/publish
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+
+WORKDIR /app
+
+COPY --from=build /app/publish .
+COPY ./api/Images /app/Images
+
+EXPOSE 5098
+#ENV ASPNETCORE_URLS=http://localhost:5098
+#ENV ASPNETCORE_URLS=http://0.0.0.0:5098
+ENTRYPOINT ["dotnet", "api.dll"]
